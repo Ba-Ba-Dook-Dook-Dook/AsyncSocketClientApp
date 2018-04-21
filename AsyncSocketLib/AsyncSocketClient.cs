@@ -52,7 +52,7 @@ namespace AsyncSocketLib
                 return false;
             }
 
-            if (port <= 0 || port <= 65535)
+            if (port <= 0 || port > 65535)
             {
                 Console.WriteLine("Invalid port number! Port number must be between 0 and 65535.");
                 return false;
@@ -72,7 +72,7 @@ namespace AsyncSocketLib
             {
                 await _tcpClient.ConnectAsync(_serverIpAddress, _serverPort);
 
-                Console.WriteLine($"Connected to server IP/Port: {0}/{1}", _serverIpAddress, _serverPort);
+                Console.WriteLine("Connected to server IP/Port: {0}/{1}", _serverIpAddress, _serverPort);
             }
             catch (Exception e)
             {
