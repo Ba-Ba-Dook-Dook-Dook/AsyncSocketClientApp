@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -16,11 +17,13 @@ namespace AsyncSocketLib
         {
             get { return _serverIpAddress; }
         }
+
         public int ServerPort
         {
             get { return _serverPort; }
         }
 
+        public EventHandler<MessageReceivedEventArgs> RaiseMessageReceivedEvent;
 
         public AsyncSocketClient()
         {
@@ -73,6 +76,9 @@ namespace AsyncSocketLib
                 await _tcpClient.ConnectAsync(_serverIpAddress, _serverPort);
 
                 Console.WriteLine("Connected to server IP/Port: {0}/{1}", _serverIpAddress, _serverPort);
+
+                await ReadDataAsync(_tcpClient);
+
             }
             catch (Exception e)
             {
@@ -80,5 +86,72 @@ namespace AsyncSocketLib
                 throw;
             }
         }
+
+        private async Task ReadDataAsync(TcpClient tcpClient)
+        {
+            try
+            {
+                var clientStreamReader = new StreamReader(tcpClient.GetStream());
+                var buff = new char[64];
+
+                while (true)
+                {
+                    var readByteCount = await clientStreamReader.ReadAsync(buff, 0, buff.Length);
+
+                    if (readByteCount <= 0)
+                    {
+                        Console.WriteLine("Disconnected from server!");
+                        tcpClient.Close();
+                        break;
+                    }
+
+
+                    OnRaiseMessageReceivedEvent(new MessageReceivedEventArgs(tcpClient.Client.RemoteEndPoint.ToString(),
+                        new string(buff)));
+
+                    Array.Clear(buff, 0, buff.Length);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
+        }
+
+        public async Task SendToServer(string message)
+        {
+
+            if (string.IsNullOrEmpty(message))
+            {
+                Console.WriteLine("Empty string supplied to send!");
+                return;
+            }
+
+            if (_tcpClient == null || !_tcpClient.Connected) return;
+
+            var clientStreamWriter = new StreamWriter(_tcpClient.GetStream()) { AutoFlush = true };
+
+            await clientStreamWriter.WriteAsync(message.Trim());
+
+            Console.WriteLine("Message sended!");
+        }
+
+        public async Task CloseAndDisconnect()
+        {
+
+            if (_tcpClient != null && _tcpClient.Connected)
+                _tcpClient.Close();
+
+        }
+
+        protected virtual void OnRaiseMessageReceivedEvent(MessageReceivedEventArgs e)
+        {
+            var handler = RaiseMessageReceivedEvent;
+
+            handler?.Invoke(this, e);
+        }
+
     }
 }

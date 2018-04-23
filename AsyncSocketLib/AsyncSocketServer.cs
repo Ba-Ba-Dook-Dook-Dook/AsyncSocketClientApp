@@ -58,13 +58,10 @@ namespace AsyncSocketLib
 
         private async void TakeCaraOfTCPClient(TcpClient tcpClient)
         {
-            NetworkStream networkStream = null;
-            StreamReader streamReader = null;
-
             try
             {
-                networkStream = tcpClient.GetStream();
-                streamReader = new StreamReader(networkStream);
+                var networkStream = tcpClient.GetStream();
+                var streamReader = new StreamReader(networkStream);
 
                 var buff = new char[64];
 
@@ -74,10 +71,9 @@ namespace AsyncSocketLib
 
                     var nRet = await streamReader.ReadAsync(buff, 0, buff.Length);
 
-                    Debug.WriteLine($"Returned: {nRet}");
-
                     if (nRet == 0)
                     {
+                        
                         Debug.WriteLine("Socket disconnected.");
                         break;
                     }
