@@ -23,6 +23,8 @@ namespace AsyncSocketLib
             get { return _serverPort; }
         }
 
+        public EventHandler<ServerDisconnectedEventArgs> RaiseServerDisconnectedEvent;
+        public EventHandler<ServerConnectedEventArgs> RaiseServerConnectedEvent;
         public EventHandler<MessageReceivedEventArgs> RaiseMessageReceivedEvent;
 
         public AsyncSocketClient()
@@ -75,7 +77,7 @@ namespace AsyncSocketLib
             {
                 await _tcpClient.ConnectAsync(_serverIpAddress, _serverPort);
 
-                Console.WriteLine("Connected to server IP/Port: {0}/{1}", _serverIpAddress, _serverPort);
+                OnRaiseServerConnectedEvent(new ServerConnectedEventArgs(_serverIpAddress.ToString(), ServerPort.ToString()));
 
                 await ReadDataAsync(_tcpClient);
 
@@ -100,7 +102,7 @@ namespace AsyncSocketLib
 
                     if (readByteCount <= 0)
                     {
-                        Console.WriteLine("Disconnected from server!");
+                        OnRaiseServerDisconnectedEvent(new ServerDisconnectedEventArgs(tcpClient.Client.LocalEndPoint.ToString(), tcpClient.Client.RemoteEndPoint.ToString()));
                         tcpClient.Close();
                         break;
                     }
@@ -119,6 +121,8 @@ namespace AsyncSocketLib
             }
 
         }
+
+
 
         public async Task SendToServer(string message)
         {
@@ -153,5 +157,18 @@ namespace AsyncSocketLib
             handler?.Invoke(this, e);
         }
 
+        private void OnRaiseServerDisconnectedEvent(ServerDisconnectedEventArgs serverDisconnectedEventArgs)
+        {
+            var handler = RaiseServerDisconnectedEvent;
+
+            handler?.Invoke(this, serverDisconnectedEventArgs);
+        }
+
+        private void OnRaiseServerConnectedEvent(ServerConnectedEventArgs serverConnectedEventArgs)
+        {
+            var handler = RaiseServerConnectedEvent;
+
+            handler?.Invoke(this, serverConnectedEventArgs);
+        }
     }
 }

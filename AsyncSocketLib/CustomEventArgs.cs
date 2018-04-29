@@ -25,4 +25,29 @@ namespace AsyncSocketLib
         }
     }
 
+    public class ServerDisconnectedEventArgs : EventArgs
+    {
+        public string Port { get; set; }
+        public string Server { get; set; }
+
+        public ServerDisconnectedEventArgs(string server, string port)
+        {
+            Server = server;
+            Port = port;
+        }
+    }
+
+    public class ServerConnectedEventArgs : EventArgs
+    {
+        public string Port { get; set; }
+        public string Server { get; set; }
+
+        public ServerConnectedEventArgs(string server, string port)
+        {
+            Server = server;
+            Port = port;
+        }
+    }
+    
+
 }
